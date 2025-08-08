@@ -1,0 +1,28 @@
+services:
+  postgres:
+    image: postgres:17
+    container_name: pg17
+    env_file:
+      - .env
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+  python:
+    build: ./python
+    container_name: pyetl
+    depends_on:
+      - postgres
+    env_file:
+      - .env
+    working_dir: /app
+    volumes:
+      - ./python:/app                      # Python code and Dockerfile
+      - ../etl_pipeline/patient_data:/app/data  # CSV source
+      - ../etl_pipeline/health_data:/app/health_data # ✅ Mount all year folders
+      - ./logs:/app/logs                   # Persist ETL logs
+    command: python run_pipeline.py        # Manual orchestration trigger
+
+volumes:
+  pgdata:
